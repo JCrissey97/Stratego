@@ -1,6 +1,8 @@
 #pragma once
 #include <SFML\Graphics.hpp>
+#include <SFML\Main.hpp>
 #include <iostream>
+#include <string>
 #include "GameState.h"
 
 using sf::Vector2;
@@ -15,10 +17,11 @@ using std::endl;
 class Renderer
 {
 public:
-	Renderer(RenderWindow & window);
+	Renderer();
 	void game();
 	void rules();
 	void renderGrid();
+	void menu();
 	void loadTextures(Texture * textures[27]);
 	
 private:

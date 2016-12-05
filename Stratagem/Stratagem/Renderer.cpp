@@ -1,8 +1,10 @@
 #include "Renderer.h"
 
-Renderer::Renderer(RenderWindow & window)
+Renderer::Renderer()
 {
-	mWindow = &window;
+	VideoMode mode(700, 700);
+	RenderWindow * window = new RenderWindow(mode, "Stratagem");
+	mWindow = window;
 	Texture * textures[27];
 	for (int i = 0; i < 27; i++)
 	{
@@ -28,6 +30,38 @@ void Renderer::game()
 
 void Renderer::rules()
 {
+
+}
+
+void Renderer::menu()
+{
+	Texture * bgT = new Texture();
+	bgT->loadFromFile("MENU.png");
+	Vector2<float> size(350, 300);
+	RectangleShape bg(size);
+	bg.scale(2.0f, 2.0f);
+
+	Texture * play = new Texture();
+	play->loadFromFile("STARTBUTTON.png");
+	Texture * rules = new Texture();
+	rules->loadFromFile("RULESBUTTON.png");
+	size.x = 300;
+	size.y = 100;
+	RectangleShape playButton(size);
+	RectangleShape rulesButton(size);
+	playButton.setTexture(play);
+	rulesButton.setTexture(rules);
+	rulesButton.setOrigin(rulesButton.getGlobalBounds().width, 0);
+	playButton.setPosition(10, 320);
+	rulesButton.setPosition(690, 320);
+	while (mWindow->isOpen())
+	{
+		mWindow->clear();
+		mWindow->draw(bg);
+		mWindow->draw(playButton);
+		mWindow->draw(rulesButton);
+		mWindow->display();
+	}
 }
 
 void Renderer::creator()

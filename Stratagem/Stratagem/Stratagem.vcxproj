@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GameState.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="miner.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="spy.cpp" />
