@@ -1,1 +1,7 @@
-﻿
+﻿  Renderer.cpp
+d:\stratego\stratagem\stratagem\renderer.cpp(103): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\stratego\stratagem\stratagem\renderer.cpp(107): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\stratego\stratagem\stratagem\renderer.cpp(285): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\stratego\stratagem\stratagem\renderer.cpp(333): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  Stratagem.vcxproj -> D:\Stratego\Stratagem\Debug\Stratagem.exe
+  Stratagem.vcxproj -> D:\Stratego\Stratagem\Debug\Stratagem.pdb (Full PDB)

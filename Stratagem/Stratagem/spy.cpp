@@ -1,6 +1,6 @@
 #include "spy.h"
 
-Spy::Spy(string newName, int newOwnership, int newRank, string newPath) : Token(newName, newOwnership, newRank, newPath)
+Spy::Spy(string newName, int newOwnership, int newRank) : Token(newName, newOwnership, newRank)
 {
 }
 

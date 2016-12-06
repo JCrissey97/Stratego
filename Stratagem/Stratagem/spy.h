@@ -4,6 +4,6 @@
 class Spy: public Token
 {
 public:
-	Spy(string newName, int newOwnership, int newRank, string newPath);
+	Spy(string newName, int newOwnership, int newRank);
 	int isRankHigher(int rank2);
 };

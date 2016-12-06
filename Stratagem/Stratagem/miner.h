@@ -4,6 +4,6 @@
 class Miner: public Token
 {
 public:
-	Miner(string newName, int newOwnership, int newRank, string newPath);
+	Miner(string newName, int newOwnership, int newRank);
 	int isRankHigher(int rank2);
 };

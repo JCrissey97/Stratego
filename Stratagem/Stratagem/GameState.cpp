@@ -2,6 +2,10 @@
 #include"Token.h"
 #include"Spy.h"
 #include"Miner.h"
+#include "gem.h"
+#include <iostream>
+using std::cout;
+using std::endl;
 
 GameState::GameState() {
 	for (int i = 0; i < 10; i++) 
@@ -21,16 +25,60 @@ GameState::~GameState() {
 	}
 }
 
-bool GameState::setTokenAt(int x, int y, string name, int ownership, int rank, string path) {
-	Token * newT;
-	if (rank == 1) {
-		newT = new Spy(name, ownership, rank, path);
+//column-row
+void GameState::convert(int player1[4][10], int player2[4][10])
+{
+	//Create tokens for player 1
+	for (int x=0; x <= 3; x++)
+	{
+		for (int y = 0; y <= 9; y++)
+		{
+			setTokenAt(x, y, 1, player1[x][y] + 1);
+		}
 	}
-	else if (rank == 3) {
-		newT = new Miner(name, ownership, rank, path);
+
+	//Create tokens for player 2
+	for (int x2 = 6; x2 <= 9; x2++)
+	{
+		for (int y2 = 0; y2 <= 9; y2++)
+		{
+			setTokenAt(x2, y2, 2, player2[x2][y2] + 1);
+		}
+	}
+}
+
+bool GameState::setTokenAt(int x, int y, int ownership, int rank)
+{
+	std::string name = " ";
+
+	switch (rank)
+	{
+	case 1: name = "Spy"; break;
+	case 2: name = "Scout"; break;
+	case 3: name = "Miner"; break;
+	case 4: name = "Sergeants"; break;
+	case 5: name = "Lieutenants"; break;
+	case 6: name = "Captains"; break;
+	case 7: name = "Majors"; break;
+	case 8: name = "Colonels"; break;
+	case 9: name = "General"; break;
+	case 10: name = "Marshal"; break;
+	case 11: name = "Bomb"; break;
+	case 12: name = "Gem"; break;
+	default: cout << "ERROR"; break;
+	}
+
+	Token * newT;
+    if (rank == 1) 
+	{
+		newT = new Spy(name, ownership, rank);
+	}
+	else if (rank == 3) 
+	{
+		newT = new Miner(name, ownership, rank);
 	}
 	else {
-		newT = new Token(name, ownership, rank, path);
+		newT = new Token(name, ownership, rank);
 	}
 	board[x][y] = newT;
 	if (board[x][y] != nullptr) {
@@ -114,7 +162,12 @@ bool GameState::attackPiece(int x, int y, int x2, int y2) {
 			rank2 = temp2->getRank();
 			int elim;
 			elim = temp->isRankHigher(rank2);
-			if (elim == 1) {
+			if (rank2 == 12) 
+			{
+				gameOver = true;
+				cout << "GAME OVER! " << "Player " << temp->getOwnership() << " won the match!" << endl;
+			}
+			else if (elim == 1) {
 				board[x2][y2] = board[x][y];
 				board[x][y] = nullptr;
 				delete temp2;

@@ -1,8 +1,18 @@
 #include "Renderer.h"
 
+Renderer::~Renderer()
+{
+	for (int i = 0; i < 27; i++)
+	{
+		delete mTextures[i];
+
+	}
+	delete mGame;
+	delete mWindow;
+}
 Renderer::Renderer()
 {
-	VideoMode mode(700, 700);
+	VideoMode mode(800, 728);
 	RenderWindow * window = new RenderWindow(mode, "Stratagem");
 	mWindow = window;
 	Texture * textures[27];
@@ -16,16 +26,38 @@ Renderer::Renderer()
 		mTextures[i] = textures[i];
 	}
 	mGame = new GameState();
-	this->renderGrid();	
+	this->renderGrid();
 }
 void Renderer::game()
 {
-	Texture * textures[27];
 	creator();
-		/*while (isOpen())
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 10; j++)
 		{
-
-		}*/
+			mGrid[j][i]->setTexture(mTextures[25]);
+		}
+	}
+	while (mWindow->isOpen())
+	{
+		Event e;
+		while (mWindow->pollEvent(e))
+		{
+			if (e.type == Event::Closed)
+			{
+				mWindow->close();
+			}
+		}
+		mWindow->clear();
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 10; j++)
+			{
+				mWindow->draw(*mGrid[i][j]);
+			}
+		}
+		mWindow->display();
+	}
 }
 
 void Renderer::rules()
@@ -37,12 +69,13 @@ void Renderer::menu()
 {
 	Texture * bgT = new Texture();
 	bgT->loadFromFile("MENU.png");
-	Vector2<float> size(350, 300);
+	Vector2<float> size(400, 350);
 	RectangleShape bg(size);
 	bg.scale(2.0f, 2.0f);
+	bg.setTexture(bgT);
 
 	Texture * play = new Texture();
-	play->loadFromFile("STARTBUTTON.png");
+	play->loadFromFile("PLAYBUTTON.png");
 	Texture * rules = new Texture();
 	rules->loadFromFile("RULESBUTTON.png");
 	size.x = 300;
@@ -52,33 +85,182 @@ void Renderer::menu()
 	playButton.setTexture(play);
 	rulesButton.setTexture(rules);
 	rulesButton.setOrigin(rulesButton.getGlobalBounds().width, 0);
-	playButton.setPosition(10, 320);
-	rulesButton.setPosition(690, 320);
+	playButton.setPosition(35, 320);
+	rulesButton.setPosition(765, 320);
 	while (mWindow->isOpen())
 	{
+		Event e;
+		while (mWindow->pollEvent(e))
+		{
+			if (e.type == Event::Closed)
+			{
+				mWindow->close();
+			}
+			if (e.type == Event::MouseButtonReleased)
+			{
+				int mouseX = Mouse::getPosition(*mWindow).x;
+				int mouseY = Mouse::getPosition(*mWindow).y;
+				if (playButton.getGlobalBounds().contains(mouseX, mouseY))
+				{
+					this->game();
+				}
+				if (rulesButton.getGlobalBounds().contains(mouseX, mouseY))
+				{
+					this->rules();
+				}
+			}
+		}
 		mWindow->clear();
 		mWindow->draw(bg);
 		mWindow->draw(playButton);
 		mWindow->draw(rulesButton);
 		mWindow->display();
+
 	}
 }
 
-void Renderer::creator()
+bool Renderer::creator()
 {
+	int numRank[] = { 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6, 1 };
+	int pieces[10][4];
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			pieces[i][j] = 0;
+		}
+	}
+	bool toNext = false;
 	while (mWindow->isOpen())
 	{
+
+		Event e;
+		while (mWindow->pollEvent(e))
+		{
+			if (e.type == Event::Closed) mWindow->close();
+			if (e.type == Event::MouseButtonReleased)
+			{
+				int mouseX = Mouse::getPosition(*mWindow).x;
+				int mouseY = Mouse::getPosition(*mWindow).y;
+				if (mouseY >= 360 && isSquareAt(mouseX, mouseY))
+				{
+					int currRanks[12];
+					for (int i = 0; i < 12; i++)
+					{
+						currRanks[i] = 0;
+					}
+					for (int i = 0; i < 10; i++)
+					{
+						for (int j = 0; j < 4; j++)
+						{
+							currRanks[pieces[i][j]]++;
+						}
+					}
+					int row = (mouseY - 360) / 60;
+					int column = mouseX / 60;
+					while (currRanks[pieces[column][row]] >= numRank[pieces[column][row]])
+					{
+						if (pieces[column][row] >= 11) pieces[column][row] = 0;
+						else pieces[column][row] += 1;
+					}
+					int piece = pieces[column][row];
+					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[piece]);
+					if (piece >= 11) pieces[column][row] = 0;
+					else pieces[column][row] += 1;
+
+				}
+			}
+		}
 		mWindow->clear();
 		for (int i = 0; i < 10; i++)
 		{
 			for (int j = 0; j < 10; j++)
 			{
-				mWindow->draw(grid[i][j]);
+				mWindow->draw(*mGrid[i][j]);
 			}
 		}
 		mWindow->display();
+		
+		if (toNext)
+		{
+			//send data
+			break;
+		}
 	}
-	/*int numRank[] = { 1, 8, 5, 4, 4, 6, 3, 8, 1, 1, 6, 1 };
+	
+	int pieces2[10][4];
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			pieces2[i][j] = 0;
+		}
+	}
+	toNext = false;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 10; j++)
+		{
+			mGrid[j][i + 6]->setTexture(mTextures[12]);
+		}
+	}
+	while (mWindow->isOpen())
+	{
+
+		Event e;
+		while (mWindow->pollEvent(e))
+		{
+			if (e.type == Event::Closed) mWindow->close();
+			if (e.type == Event::MouseButtonReleased)
+			{
+				int mouseX = Mouse::getPosition(*mWindow).x;
+				int mouseY = Mouse::getPosition(*mWindow).y;
+				if (mouseY <= 240 && isSquareAt(mouseX, mouseY))
+				{
+					int row = mouseY / 60;
+					int column = mouseX / 60;
+					int currRanks[12];
+					for (int i = 0; i < 12; i++)
+					{
+						currRanks[i] = 0;
+					}
+					for (int i = 0; i < 10; i++)
+					{
+						for (int j = 0; j < 4; j++)
+						{
+							currRanks[pieces[i][j]]++;
+						}
+					}
+					while (currRanks[pieces[column][row]] >= numRank[pieces[column][row]])
+					{
+						if (pieces[column][row] >= 11) pieces[column][row] = 0;
+						else pieces[column][row] += 1;
+					}
+					int piece = pieces[column][row];
+					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[piece]);
+					if (piece >= 11) pieces[column][row] = 0;
+					else pieces[column][row] += 1;
+
+				}
+			}
+		}
+		mWindow->clear();
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 10; j++)
+			{
+				mWindow->draw(*mGrid[i][j]);
+			}
+		}
+		mWindow->display();
+		
+		if (toNext)
+		{
+			//send data
+			break;
+		}
+	}
+	/*
 	RectangleShape * rectangles[10][10];
 
 	for (int i = 0; i <= 9; i++)
@@ -88,18 +270,20 @@ void Renderer::creator()
 
 	}
 	}*/
+	return toNext;
 }
 void Renderer::renderGrid()
 {
-	Vector2<float> size(50, 50);
+	Vector2<float> size(60, 60);
 	for (int i = 0; i < 10; i++)
 	{
 		for (int j = 0; j < 10; j++)
 		{
 
-			grid[i][j] = RectangleShape(size);
-			grid[i][j].setTexture(mTextures[26]);
-			Vector2<float> pos(i * 50, (j * 50) + 100);
+			mGrid[i][j] = new RectangleShape(size);
+			mGrid[i][j]->setTexture(mTextures[26]);
+			Vector2<float> pos(i * 60, (j * 60));
+			mGrid[i][j]->setPosition(pos);
 		}
 	}
 }
@@ -115,9 +299,10 @@ void Renderer::loadTextures(Texture * textures[27])
 	textures[7]->loadFromFile("colonel.png");
 	textures[8]->loadFromFile("general.png");
 	textures[9]->loadFromFile("marshall.png");
-	textures[10]->loadFromFile("gem.png");
-	textures[11]->loadFromFile("bomb.png");
-	textures[12]->loadFromFile("spy2.png");
+	textures[10]->loadFromFile("bomb.png");
+	textures[11]->loadFromFile("gem.png");
+	textures[12]->loadFromFile("blankp1.png");
+	textures[13]->loadFromFile("spy2.png");
 	textures[14]->loadFromFile("scout2.png");
 	textures[15]->loadFromFile("miner2.png");
 	textures[16]->loadFromFile("sergeant2.png");
@@ -127,8 +312,26 @@ void Renderer::loadTextures(Texture * textures[27])
 	textures[20]->loadFromFile("colonel2.png");
 	textures[21]->loadFromFile("general2.png");
 	textures[22]->loadFromFile("marshall2.png");
-	textures[23]->loadFromFile("gem2.png");
-	textures[24]->loadFromFile("bomb2.png");
+	textures[23]->loadFromFile("bomb2.png");
+	textures[24]->loadFromFile("gem2.png");
 	textures[25]->loadFromFile("blankp2.png");
 	textures[26]->loadFromFile("blanksquare.png");
+}
+
+RectangleShape * Renderer::getSquareAt(int x, int y)
+{
+	return mGrid[x / 60][y / 60];
+}
+
+bool Renderer::isSquareAt(int x, int y)
+{
+	bool result = false;
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 10; j++)
+		{
+			if (mGrid[i][j]->getGlobalBounds().contains(x, y)) result = true;
+		}
+	}
+	return result;
 }

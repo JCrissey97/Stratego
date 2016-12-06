@@ -11,23 +11,27 @@ using sf::RectangleShape;
 using sf::VideoMode;
 using sf::Texture;
 using sf::Mouse;
+using sf::Event;
 using std::cout;
 using std::endl;
 
 class Renderer
 {
 public:
+	~Renderer();
 	Renderer();
 	void game();
 	void rules();
 	void renderGrid();
 	void menu();
 	void loadTextures(Texture * textures[27]);
+	RectangleShape * getSquareAt(int x, int y);
+	bool isSquareAt(int x, int y);
 	
 private:
-	Texture * mTextures[27];
+	Texture * mTextures[28];
 	GameState * mGame;
-	void creator();
-	RectangleShape grid[10][10];
+	bool creator();
+	RectangleShape * mGrid[10][10];
 	RenderWindow * mWindow;
 };

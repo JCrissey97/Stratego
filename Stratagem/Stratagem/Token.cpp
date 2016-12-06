@@ -1,16 +1,14 @@
 #include"Token.h"
 
-Token::Token(string newName, int newOwnership, int newRank, string newPath) {
+Token::Token(string newName, int newOwnership, int newRank) {
 	name = newName;
 	rank = newRank;
 	ownership = newOwnership;
-	path = newPath;
 }
 Token::Token() {
 	name = "UNINITIALIZED!";
 	rank = 0;
 	ownership = 1;
-	path = "";
 }
 Token::~Token() {
 

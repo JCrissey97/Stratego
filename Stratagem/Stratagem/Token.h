@@ -2,14 +2,13 @@
 
 #include<stdio.h>
 #include<string>
-#include <SFML\Graphics.hpp>
 using std::string;
 
-class Token : public sf::Sprite {
+class Token {
 	friend class Miner;
 	friend class Spy;
 public:
-	Token(string newName, int newOwnership, int newRank, string newPath);
+	Token(string newName, int newOwnership, int newRank);
 	Token();
 	~Token();
 
