@@ -2,7 +2,6 @@
 #include"Token.h"
 #include"Spy.h"
 #include"Miner.h"
-#include "gem.h"
 #include <iostream>
 using std::cout;
 using std::endl;

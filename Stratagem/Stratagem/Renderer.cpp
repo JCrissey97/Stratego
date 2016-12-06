@@ -127,7 +127,7 @@ bool Renderer::creator()
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			pieces[i][j] = 0;
+			pieces[i][j] = -1;
 		}
 	}
 	bool toNext = false;
@@ -153,17 +153,23 @@ bool Renderer::creator()
 					{
 						for (int j = 0; j < 4; j++)
 						{
-							currRanks[pieces[i][j]]++;
+							if (pieces[i][j] > -1) currRanks[pieces[i][j]]++;
 						}
 					}
 					int row = (mouseY - 360) / 60;
 					int column = mouseX / 60;
+					int piece = pieces[column][row];
+					if (pieces[column][row] < 0)
+					{
+						pieces[column][row] = 0;
+					}
+
 					while (currRanks[pieces[column][row]] >= numRank[pieces[column][row]])
 					{
 						if (pieces[column][row] >= 11) pieces[column][row] = 0;
 						else pieces[column][row] += 1;
 					}
-					int piece = pieces[column][row];
+
 					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[piece]);
 					if (piece >= 11) pieces[column][row] = 0;
 					else pieces[column][row] += 1;
@@ -180,20 +186,21 @@ bool Renderer::creator()
 			}
 		}
 		mWindow->display();
-		
-		if (toNext)
+		for (int i = 0; i < 12; i++)
 		{
-			//send data
-			break;
+			if (toNext)
+			{
+				break;
+			}
 		}
 	}
-	
+
 	int pieces2[10][4];
 	for (int i = 0; i < 10; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			pieces2[i][j] = 0;
+			pieces2[i][j] = -1;
 		}
 	}
 	toNext = false;
@@ -228,18 +235,21 @@ bool Renderer::creator()
 					{
 						for (int j = 0; j < 4; j++)
 						{
-							currRanks[pieces[i][j]]++;
+							if (pieces2[i][j] > -1)currRanks[pieces2[i][j]]++;
 						}
 					}
-					while (currRanks[pieces[column][row]] >= numRank[pieces[column][row]])
+					if (pieces2[column][row] > -1) //fix - see line 162
 					{
-						if (pieces[column][row] >= 11) pieces[column][row] = 0;
-						else pieces[column][row] += 1;
+						while (currRanks[pieces2[column][row]] >= numRank[pieces2[column][row]])
+						{
+							if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
+							else pieces2[column][row] += 1;
+						}
 					}
-					int piece = pieces[column][row];
+					int piece = pieces2[column][row];
 					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[piece]);
-					if (piece >= 11) pieces[column][row] = 0;
-					else pieces[column][row] += 1;
+					if (piece >= 11) pieces2[column][row] = 0;
+					else pieces2[column][row] += 1;
 
 				}
 			}
@@ -253,7 +263,7 @@ bool Renderer::creator()
 			}
 		}
 		mWindow->display();
-		
+
 		if (toNext)
 		{
 			//send data
