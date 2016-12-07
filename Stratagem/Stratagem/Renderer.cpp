@@ -609,67 +609,70 @@ bool Renderer::creator()
 			mGrid[j][i + 6]->setTexture(mTextures[12]);
 		}
 	}
-	while (mWindow->isOpen())
+	if (!breakLoop);
 	{
-		int currRanks[12];
-		for (int i = 0; i < 12; i++)
+		while (mWindow->isOpen())
 		{
-			currRanks[i] = 0;
-		}
-		for (int i = 0; i < 10; i++)
-		{
-			for (int j = 0; j < 4; j++)
+			int currRanks[12];
+			for (int i = 0; i < 12; i++)
 			{
-				if (pieces2[i][j] > -1) currRanks[pieces2[i][j]]++;
+				currRanks[i] = 0;
 			}
-		}
-		Event e;
-		while (mWindow->pollEvent(e))
-		{
-			if (e.type == Event::Closed) mWindow->close();
-			if (e.type == Event::MouseButtonReleased)
+			for (int i = 0; i < 10; i++)
 			{
-				int mouseX = Mouse::getPosition(*mWindow).x;
-				int mouseY = Mouse::getPosition(*mWindow).y;
-				if (mouseY <= 240 && isSquareAt(mouseX, mouseY))
+				for (int j = 0; j < 4; j++)
 				{
-					int row = mouseY / 60;
-					int column = mouseX / 60;
-
-					if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
-					else pieces2[column][row] += 1;
-
-					while (currRanks[pieces2[column][row]] >= maxRanks[pieces2[column][row]])
-					{
-						if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
-						else pieces2[column][row] += 1;
-					}
-					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[pieces2[column][row] + 13]);
+					if (pieces2[i][j] > -1) currRanks[pieces2[i][j]]++;
 				}
 			}
-		}
-		mWindow->clear();
-		for (int i = 0; i < 10; i++)
-		{
-			for (int j = 0; j < 10; j++)
+			Event e;
+			while (mWindow->pollEvent(e))
 			{
-				mWindow->draw(*mGrid[i][j]);
+				if (e.type == Event::Closed) mWindow->close();
+				if (e.type == Event::MouseButtonReleased)
+				{
+					int mouseX = Mouse::getPosition(*mWindow).x;
+					int mouseY = Mouse::getPosition(*mWindow).y;
+					if (mouseY <= 240 && isSquareAt(mouseX, mouseY))
+					{
+						int row = mouseY / 60;
+						int column = mouseX / 60;
+
+						if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
+						else pieces2[column][row] += 1;
+
+						while (currRanks[pieces2[column][row]] >= maxRanks[pieces2[column][row]])
+						{
+							if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
+							else pieces2[column][row] += 1;
+						}
+						mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[pieces2[column][row] + 13]);
+					}
+				}
 			}
-		}
-		mWindow->draw(*mSidebar);
-		mWindow->draw(button);
-		mWindow->display();
-		toNext = true;
-		for (int i = 0; i < 12; i++)
-		{
-			if (!(maxRanks[i] == currRanks[i]))
+			mWindow->clear();
+			for (int i = 0; i < 10; i++)
 			{
-				toNext = false;
-				break;
+				for (int j = 0; j < 10; j++)
+				{
+					mWindow->draw(*mGrid[i][j]);
+				}
 			}
+			mWindow->draw(*mSidebar);
+			mWindow->draw(button);
+			mWindow->display();
+			toNext = true;
+			for (int i = 0; i < 12; i++)
+			{
+				if (!(maxRanks[i] == currRanks[i]))
+				{
+					toNext = false;
+					break;
+				}
+			}
+			if (toNext) break;
+			if (breakLoop) return false;
 		}
-		if (toNext) break;
-		if (breakLoop) return false;
 	}
 	/*
 	RectangleShape * rectangles[10][10];
