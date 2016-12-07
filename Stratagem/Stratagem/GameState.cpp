@@ -167,11 +167,11 @@ bool GameState::isGameOver() {
 }
 
 bool GameState::movePiece(int x, int y, int x2, int y2) {
-	if (x <= 10 || y <= 10 || x2 <= 10 || y2 <= 10) {
+	if (x < 10 && y < 10 && x2 < 10 && y2 < 10) {
 		Token * temp = board[x][y];
 		if (temp != nullptr) {
 			int rank = temp->getRank();
-			if (rank == 12 || rank == 13) {
+			if (rank == 12 || rank == 11) {
 				return false;
 			}
 			else if (rank == 2) {

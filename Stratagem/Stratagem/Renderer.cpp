@@ -40,6 +40,7 @@ void Renderer::game()
 	}
 	bool p1Turn = true;
 	bool tokenSelected = false;
+	int moveCount = 0;
 	Token * selectedToken = nullptr;
 	while (mWindow->isOpen())
 	{
@@ -59,7 +60,7 @@ void Renderer::game()
 					if (p1Turn)
 					{
 						Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-						if (t == nullptr && selectedToken != nullptr)
+						if (selectedToken != nullptr)
 						{
 							Token * token = nullptr;
 							int fromX = -1;
@@ -83,55 +84,55 @@ void Renderer::game()
 								}
 								if (found) break;
 							}
-							if (mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership()) > 0)
-							{
-								mGrid[fromX][fromY]->setTexture(mTextures[26]);
-								t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-								int rank = t->getRank();
-								mGrid[mouseX][mouseY]->setTexture(mTextures[(rank - 1)]); //access violation 
-								p1Turn = false;
-							}
-							selectedToken = nullptr;
-						}
-						if (t != nullptr && t->getOwnership() == 1) // select or perform action
-						{
-							bool isSelected = t->switchSelected();
-							if (!isSelected) // perform action
+							if (t == selectedToken)
 							{
 								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
 								tokenSelected = false;
+								token->switchSelected();
+								selectedToken = nullptr;
 							}
 							else
 							{
-								if (tokenSelected) // if another token is already selected
+								int operation = 0;
+								bool scoutAttacked = false;
+								if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
+								else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
+								if (operation > 0 || scoutAttacked)
 								{
-									for (int i = 0; i < 10; i++)
+									mGrid[fromX][fromY]->setTexture(mTextures[26]);
+									Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+									int rank = newToken->getRank();
+									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]); //access violation 
+									if (!(operation == 1 && token->getRank() == 2))
 									{
-										for (int j = 0; j < 10; j++)
-										{
-											Token * token = mGame->getTokenAt(i, j);
-											if (token != nullptr)
-											{
-												if (token->getSelected())
-												{
-													token->switchSelected();
-													mGrid[i][j]->setTexture(mTextures[12]);
-												}
-											}
-										}
+										p1Turn = true;
+										moveCount = 0;
 									}
+									else moveCount++;
+
 								}
-								int rank = t->getRank();
-								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
-								tokenSelected = true;
-								selectedToken = t;
+								if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
+								{
+									selectedToken->switchSelected();
+									selectedToken = nullptr;
+									tokenSelected = false;
+									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
+								}
 							}
+						}
+						else if (t != nullptr && t->getOwnership() == 1) // select or perform action
+						{
+							int rank = t->getRank();
+							mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
+							tokenSelected = true;
+							selectedToken = t;
+							t->switchSelected();
 						}
 					}
 					else
 					{
 						Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-						if (t == nullptr && selectedToken != nullptr)
+						if (selectedToken != nullptr)
 						{
 							Token * token = nullptr;
 							int fromX = -1;
@@ -155,42 +156,49 @@ void Renderer::game()
 								}
 								if (found) break;
 							}
-							if (mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership()) > 0)
-							{
-								mGrid[fromX][fromY]->setTexture(mTextures[26]);
-								t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-								int rank = t->getRank();
-								mGrid[mouseX][mouseY]->setTexture(mTextures[rank + 12]);
-								p1Turn = true;
-							}
-						}
-						if (t != nullptr && t->getOwnership() == 2) // select or perform action
-						{
-							if (!t->switchSelected()) // perform action
+							if (token == selectedToken)
 							{
 								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
-
+								tokenSelected = false;
+								token->switchSelected();
+								selectedToken = nullptr;
 							}
 							else
 							{
-								for (int i = 0; i < 10; i++)
+								int operation = 0;
+								bool scoutAttacked = false;
+								if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
+								else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
+								if (operation > 0 || scoutAttacked)
 								{
-									for (int j = 0; j < 10; j++)
+									mGrid[fromX][fromY]->setTexture(mTextures[26]);
+									Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+									int rank = newToken->getRank();
+									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
+									if (!(operation == 1 && token->getRank() == 2))
 									{
-										Token * token = mGame->getTokenAt(i, j);
-										if (token != nullptr)
-										{
-											if (token->getSelected())
-											{
-												token->switchSelected();
-												mGrid[i][j]->setTexture(mTextures[25]);
-											}
-										}
+										p1Turn = true;
+										moveCount = 0;
 									}
+									else moveCount++;
+									
 								}
-								int rank = t->getRank();
-								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1) + 13]);
+								if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
+								{
+									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
+									selectedToken->switchSelected();
+									selectedToken = nullptr;
+									tokenSelected = false;
+								}
 							}
+						}
+						else if (t != nullptr && t->getOwnership() == 2) // select or perform action
+						{
+							int rank = t->getRank();
+							mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
+							tokenSelected = true;
+							selectedToken = t;
+							t->switchSelected();
 						}
 					}
 				}
