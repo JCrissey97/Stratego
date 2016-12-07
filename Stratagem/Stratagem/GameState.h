@@ -12,7 +12,8 @@ public:
 	bool GameState::setTokenAt(int x, int y, int ownership, int rank);
 	Token * getTokenAt(int x, int y);
 
-	void convert(int player1[4][10], int player2[4][10]);
+	int operate(int x, int y, int x2, int y2, int owner);
+	void convert(int * player1[10][4], int * player2[10][4]);
 	bool isGameOver();
 	bool movePiece(int x, int y, int x2, int y2);
 	bool attackPiece(int x, int y, int x2, int y2);

@@ -13,6 +13,7 @@ GameState::GameState() {
 			board[i][j] = nullptr;
 		}
 	}
+	gameOver = false;
 }
 GameState::~GameState() {
 	for (int i = 0; i < 10; i++) {
@@ -24,24 +25,93 @@ GameState::~GameState() {
 	}
 }
 
-//column-row
-void GameState::convert(int player1[4][10], int player2[4][10])
+int GameState::operate(int x, int y, int x2, int y2, int owner)
 {
-	//Create tokens for player 1
-	for (int x=0; x <= 3; x++)
+	if (board[x][y] == nullptr)
 	{
-		for (int y = 0; y <= 9; y++)
+		return 0;
+	}
+	else if (board[x][y] != nullptr)
+	{
+		if (board[x][y]->getOwnership() != owner) 
 		{
-			setTokenAt(x, y, 1, player1[x][y] + 1);
+			return 0;
+		}
+		if (board[x][y]->getRank() == 12 || board[x][y]->getRank() == 11) 
+		{
+			return 0;
+		}
+		else if (board[x2][y2] == nullptr) 
+		{
+			bool check = false;
+			check = movePiece(x, y, x2, y2);
+
+			if (check == true)
+			{
+				return 1;
+			}
+			else if (check == false)
+			{
+				return 0;
+			}
+			
+		}
+		else if (board[x2][y2] != nullptr) 
+		{
+			if (board[x2][y2]->getOwnership() == owner) 
+			{
+				return 0;
+			}
+			else 
+			{
+				if ((x == x2 && y + 1 == y2) || (x == x2 && y - 1 == y2) || 
+					(x + 1 == x2 && y  == y2) || (x - 1 == x2 && y == y2)) 
+				{
+					bool check = false;
+					check = attackPiece(x, y, x2, y2);
+
+					if (check == true)
+					{
+						return 1;
+					}
+					else if (check == false)
+					{
+						return 0;
+					}
+				}
+				else 
+				{
+					return 0;
+				}
+			}
+		}
+	}
+}
+
+//column-row
+void GameState::convert(int * player1[10][4], int * player2[10][4])
+{
+	//Create tokens for player 2
+	for (int x=0; x <= 9; x++)
+	{
+		for (int y = 0; y <= 3; y++)
+		{
+			int temp = 0;
+			temp = *player2[x][y];
+			cout << temp << endl;
+			setTokenAt(x, y, 2, temp + 1);
 		}
 	}
 
-	//Create tokens for player 2
-	for (int x2 = 6; x2 <= 9; x2++)
+	//Create tokens for player 1
+	for (int x2 = 0; x2 <= 9; x2++)
 	{
-		for (int y2 = 0; y2 <= 9; y2++)
+		for (int y2 = 6; y2 <= 9; y2++)
 		{
-			setTokenAt(x2, y2, 2, player2[x2][y2] + 1);
+			int temp = 0;
+			temp = *player1[x2][y2-6];
+			cout << temp << endl;
+			setTokenAt(x2, y2, 1, temp + 1);
 		}
 	}
 }

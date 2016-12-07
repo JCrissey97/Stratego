@@ -38,6 +38,9 @@ void Renderer::game()
 			mGrid[j][i]->setTexture(mTextures[25]);
 		}
 	}
+	bool p1Turn = true;
+	bool tokenSelected = false;
+	Token * selectedToken = nullptr;
 	while (mWindow->isOpen())
 	{
 		Event e;
@@ -46,6 +49,151 @@ void Renderer::game()
 			if (e.type == Event::Closed)
 			{
 				mWindow->close();
+			}
+			if (e.type == Event::MouseButtonReleased)
+			{
+				int mouseX = Mouse::getPosition(*mWindow).x;
+				int mouseY = Mouse::getPosition(*mWindow).y;
+				if (mouseX <= 600 && mouseY <= 600)
+				{
+					if (p1Turn)
+					{
+						Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+						if (t == nullptr && selectedToken != nullptr)
+						{
+							Token * token = nullptr;
+							int fromX = -1;
+							int fromY = -1;
+							bool found = false;
+							for (int i = 0; i < 10; i++)
+							{
+								for (int j = 0; j < 10; j++)
+								{
+									token = mGame->getTokenAt(i, j);
+									if (token != nullptr)
+									{
+										if (token->getSelected())
+										{
+											fromX = i;
+											fromY = j;
+											found = true;
+											break;
+										}
+									}
+								}
+								if (found) break;
+							}
+							if (mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership()) > 0)
+							{
+								mGrid[fromX][fromY]->setTexture(mTextures[26]);
+								t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+								int rank = t->getRank();
+								mGrid[mouseX][mouseY]->setTexture(mTextures[(rank - 1)]); //access violation 
+								p1Turn = false;
+							}
+							selectedToken = nullptr;
+						}
+						if (t != nullptr && t->getOwnership() == 1) // select or perform action
+						{
+							bool isSelected = t->switchSelected();
+							if (!isSelected) // perform action
+							{
+								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
+								tokenSelected = false;
+							}
+							else
+							{
+								if (tokenSelected) // if another token is already selected
+								{
+									for (int i = 0; i < 10; i++)
+									{
+										for (int j = 0; j < 10; j++)
+										{
+											Token * token = mGame->getTokenAt(i, j);
+											if (token != nullptr)
+											{
+												if (token->getSelected())
+												{
+													token->switchSelected();
+													mGrid[i][j]->setTexture(mTextures[12]);
+												}
+											}
+										}
+									}
+								}
+								int rank = t->getRank();
+								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
+								tokenSelected = true;
+								selectedToken = t;
+							}
+						}
+					}
+					else
+					{
+						Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+						if (t == nullptr && selectedToken != nullptr)
+						{
+							Token * token = nullptr;
+							int fromX = -1;
+							int fromY = -1;
+							bool found = false;
+							for (int i = 0; i < 10; i++)
+							{
+								for (int j = 0; j < 10; j++)
+								{
+									token = mGame->getTokenAt(i, j);
+									if (token != nullptr)
+									{
+										if (token->getSelected())
+										{
+											fromX = i;
+											fromY = j;
+											found = true;
+											break;
+										}
+									}
+								}
+								if (found) break;
+							}
+							if (mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership()) > 0)
+							{
+								mGrid[fromX][fromY]->setTexture(mTextures[26]);
+								t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+								int rank = t->getRank();
+								mGrid[mouseX][mouseY]->setTexture(mTextures[rank + 12]);
+								p1Turn = true;
+							}
+						}
+						if (t != nullptr && t->getOwnership() == 2) // select or perform action
+						{
+							if (!t->switchSelected()) // perform action
+							{
+								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
+
+							}
+							else
+							{
+								for (int i = 0; i < 10; i++)
+								{
+									for (int j = 0; j < 10; j++)
+									{
+										Token * token = mGame->getTokenAt(i, j);
+										if (token != nullptr)
+										{
+											if (token->getSelected())
+											{
+												token->switchSelected();
+												mGrid[i][j]->setTexture(mTextures[25]);
+											}
+										}
+									}
+								}
+								int rank = t->getRank();
+								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1) + 13]);
+							}
+						}
+					}
+				}
 			}
 		}
 		mWindow->clear();
@@ -57,6 +205,7 @@ void Renderer::game()
 			}
 		}
 		mWindow->display();
+		if (mGame->isGameOver()) mWindow->close();
 	}
 }
 
@@ -121,7 +270,7 @@ void Renderer::menu()
 
 bool Renderer::creator()
 {
-	int numRank[] = { 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6, 1 };
+	int maxRanks[] = { 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6, 1 };
 	int pieces[10][4];
 	for (int i = 0; i < 10; i++)
 	{
@@ -133,7 +282,18 @@ bool Renderer::creator()
 	bool toNext = false;
 	while (mWindow->isOpen())
 	{
-
+		int currRanks[12];
+		for (int i = 0; i < 12; i++)
+		{
+			currRanks[i] = 0;
+		}
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				if (pieces[i][j] > -1) currRanks[pieces[i][j]]++;
+			}
+		}
 		Event e;
 		while (mWindow->pollEvent(e))
 		{
@@ -144,35 +304,19 @@ bool Renderer::creator()
 				int mouseY = Mouse::getPosition(*mWindow).y;
 				if (mouseY >= 360 && isSquareAt(mouseX, mouseY))
 				{
-					int currRanks[12];
-					for (int i = 0; i < 12; i++)
-					{
-						currRanks[i] = 0;
-					}
-					for (int i = 0; i < 10; i++)
-					{
-						for (int j = 0; j < 4; j++)
-						{
-							if (pieces[i][j] > -1) currRanks[pieces[i][j]]++;
-						}
-					}
 					int row = (mouseY - 360) / 60;
 					int column = mouseX / 60;
-					int piece = pieces[column][row];
-					if (pieces[column][row] < 0)
-					{
-						pieces[column][row] = 0;
-					}
+					if (pieces[column][row] >= 11) pieces[column][row] = 0;
+					else pieces[column][row] += 1;
 
-					while (currRanks[pieces[column][row]] >= numRank[pieces[column][row]])
+					while (currRanks[pieces[column][row]] >= maxRanks[pieces[column][row]])
 					{
 						if (pieces[column][row] >= 11) pieces[column][row] = 0;
 						else pieces[column][row] += 1;
 					}
 
-					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[piece]);
-					if (piece >= 11) pieces[column][row] = 0;
-					else pieces[column][row] += 1;
+					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[pieces[column][row]]);
+
 
 				}
 			}
@@ -186,13 +330,16 @@ bool Renderer::creator()
 			}
 		}
 		mWindow->display();
+		toNext = true;
 		for (int i = 0; i < 12; i++)
 		{
-			if (toNext)
+			if (!(maxRanks[i] == currRanks[i]))
 			{
+				toNext = false;
 				break;
 			}
 		}
+		if (toNext) break;
 	}
 
 	int pieces2[10][4];
@@ -213,7 +360,18 @@ bool Renderer::creator()
 	}
 	while (mWindow->isOpen())
 	{
-
+		int currRanks[12];
+		for (int i = 0; i < 12; i++)
+		{
+			currRanks[i] = 0;
+		}
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				if (pieces2[i][j] > -1) currRanks[pieces2[i][j]]++;
+			}
+		}
 		Event e;
 		while (mWindow->pollEvent(e))
 		{
@@ -226,31 +384,16 @@ bool Renderer::creator()
 				{
 					int row = mouseY / 60;
 					int column = mouseX / 60;
-					int currRanks[12];
-					for (int i = 0; i < 12; i++)
-					{
-						currRanks[i] = 0;
-					}
-					for (int i = 0; i < 10; i++)
-					{
-						for (int j = 0; j < 4; j++)
-						{
-							if (pieces2[i][j] > -1)currRanks[pieces2[i][j]]++;
-						}
-					}
-					if (pieces2[column][row] > -1) //fix - see line 162
-					{
-						while (currRanks[pieces2[column][row]] >= numRank[pieces2[column][row]])
-						{
-							if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
-							else pieces2[column][row] += 1;
-						}
-					}
-					int piece = pieces2[column][row];
-					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[piece]);
-					if (piece >= 11) pieces2[column][row] = 0;
+
+					if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
 					else pieces2[column][row] += 1;
 
+					while (currRanks[pieces2[column][row]] >= maxRanks[pieces2[column][row]])
+					{
+						if (pieces2[column][row] >= 11) pieces2[column][row] = 0;
+						else pieces2[column][row] += 1;
+					}
+					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[pieces2[column][row] + 13]);
 				}
 			}
 		}
@@ -263,12 +406,16 @@ bool Renderer::creator()
 			}
 		}
 		mWindow->display();
-
-		if (toNext)
+		toNext = true;
+		for (int i = 0; i < 12; i++)
 		{
-			//send data
-			break;
+			if (!(maxRanks[i] == currRanks[i]))
+			{
+				toNext = false;
+				break;
+			}
 		}
+		if (toNext) break;
 	}
 	/*
 	RectangleShape * rectangles[10][10];
@@ -280,6 +427,17 @@ bool Renderer::creator()
 
 	}
 	}*/
+	int * pPieces[10][4];
+	int * pPieces2[10][4];
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			pPieces[i][j] = &pieces[i][j];
+			pPieces2[i][j] = &pieces2[i][j];
+		}
+	}
+	mGame->convert(pPieces, pPieces2); //update GameState
 	return toNext;
 }
 void Renderer::renderGrid()

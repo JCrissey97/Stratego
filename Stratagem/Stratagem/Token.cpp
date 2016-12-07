@@ -4,11 +4,15 @@ Token::Token(string newName, int newOwnership, int newRank) {
 	name = newName;
 	rank = newRank;
 	ownership = newOwnership;
+	selected = false;
+	revealed = false;
 }
 Token::Token() {
 	name = "UNINITIALIZED!";
 	rank = 0;
-	ownership = 1;
+	ownership = 0;
+	selected = false;
+	revealed = false;
 }
 Token::~Token() {
 
@@ -30,4 +34,27 @@ int Token::isRankHigher(int rank2) {
 	else if (rank < rank2) {
 		return 2;
 	}
+}
+bool Token::getSelected()
+{
+	return this->selected;
+}
+
+bool Token::switchSelected()
+{
+	if (selected) selected = false;
+	else selected = true;
+	return selected;
+}
+
+bool Token::isRevealed()
+{
+	return revealed;
+}
+
+bool Token::switchRevealed()
+{
+	if (revealed) revealed = false;
+	else revealed = true;
+	return revealed;
 }

@@ -16,10 +16,16 @@ public:
 	int getOwnership();
 	int getRank();
 	virtual int isRankHigher(int rank2);
+	bool getSelected();
+	bool switchSelected();
+	bool isRevealed();
+	bool switchRevealed();
 
 private:
 	string name;
 	int rank;
 	int ownership;
 	string path;
+	bool selected;
+	bool revealed;
 };
