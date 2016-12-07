@@ -52,9 +52,7 @@ bool Token::isRevealed()
 	return revealed;
 }
 
-bool Token::switchRevealed()
+void Token::setRevealed(bool b)
 {
-	if (revealed) revealed = false;
-	else revealed = true;
-	return revealed;
+	revealed = b;
 }

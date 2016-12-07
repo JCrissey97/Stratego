@@ -33,5 +33,6 @@ private:
 	GameState * mGame;
 	bool creator();
 	RectangleShape * mGrid[10][10];
+	RectangleShape * mSidebar;
 	RenderWindow * mWindow;
 };

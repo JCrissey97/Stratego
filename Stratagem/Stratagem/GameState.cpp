@@ -225,31 +225,37 @@ bool GameState::movePiece(int x, int y, int x2, int y2) {
 bool GameState::attackPiece(int x, int y, int x2, int y2) {
 	Token * temp = board[x][y];
 	if (temp != nullptr) {
-		Token * temp2 = board[x2][y2];
-		if (temp2 != nullptr) {
-			int rank2;
-			rank2 = temp2->getRank();
-			int elim;
-			elim = temp->isRankHigher(rank2);
-			if (rank2 == 12) 
-			{
-				gameOver = true;
-				cout << "GAME OVER! " << "Player " << temp->getOwnership() << " won the match!" << endl;
+		if ((x == x2 && y + 1 == y2) || (x == x2 && y - 1 == y2) ||
+			(x + 1 == x2 && y == y2) || (x - 1 == x2 && y == y2))
+		{
+			Token * temp2 = board[x2][y2];
+			if (temp2 != nullptr) {
+				int rank2;
+				rank2 = temp2->getRank();
+				int elim;
+				elim = temp->isRankHigher(rank2);
+				if (rank2 == 12)
+				{
+					gameOver = true;
+					cout << "GAME OVER! " << "Player " << temp->getOwnership() << " won the match!" << endl;
+				}
+				else if (elim == 1) {
+					board[x2][y2] = board[x][y];
+					board[x2][y2]->setRevealed(true);
+					board[x][y] = nullptr;
+					delete temp2;
+					return true;
+				}
+				else if (elim == 2) {
+					board[x][y] = nullptr;
+					delete temp;
+					return true;
+				}
+				else {
+					return false;
+				}
 			}
-			else if (elim == 1) {
-				board[x2][y2] = board[x][y];
-				board[x][y] = nullptr;
-				delete temp2;
-				return true;
-			}
-			else if (elim == 2) {
-				board[x][y] = nullptr;
-				delete temp;
-				return true;
-			}
-			else {
-				return false;
-			}
+			else return false;
 		}
 		else {
 			return false;

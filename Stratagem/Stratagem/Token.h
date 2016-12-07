@@ -19,7 +19,7 @@ public:
 	bool getSelected();
 	bool switchSelected();
 	bool isRevealed();
-	bool switchRevealed();
+	void setRevealed(bool b);
 
 private:
 	string name;

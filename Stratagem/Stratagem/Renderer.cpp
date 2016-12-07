@@ -12,7 +12,13 @@ Renderer::~Renderer()
 }
 Renderer::Renderer()
 {
-	VideoMode mode(800, 728);
+	Texture * t = new Texture();
+	t->loadFromFile("sidebar.png");
+	Vector2<float> size(200, 740);
+	mSidebar = new RectangleShape(size);
+	mSidebar->setTexture(t);
+	mSidebar->setPosition(600, 0);
+	VideoMode mode(800, 740);
 	RenderWindow * window = new RenderWindow(mode, "Stratagem");
 	mWindow = window;
 	Texture * textures[27];
@@ -42,6 +48,7 @@ void Renderer::game()
 	bool tokenSelected = false;
 	int moveCount = 0;
 	Token * selectedToken = nullptr;
+	
 	while (mWindow->isOpen())
 	{
 		Event e;
@@ -90,6 +97,11 @@ void Renderer::game()
 								tokenSelected = false;
 								token->switchSelected();
 								selectedToken = nullptr;
+								if (moveCount > 0)
+								{
+									p1Turn = false;
+									moveCount = 0;
+								}
 							}
 							else
 							{
@@ -103,24 +115,30 @@ void Renderer::game()
 									Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
 									int rank = newToken->getRank();
 									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]); //access violation 
-									if (!(operation == 1 && token->getRank() == 2))
+									if (!(operation == 1 && newToken->getRank() == 2))
 									{
-										p1Turn = true;
+										p1Turn = false;
 										moveCount = 0;
 									}
-									else moveCount++;
-
+									else
+									{
+										if (moveCount < 1) moveCount++;
+									}
+									if (!(operation == 1 && newToken->getRank() == 2) || scoutAttacked)
+									{
+										selectedToken->switchSelected();
+										selectedToken = nullptr;
+										tokenSelected = false;
+										if(mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed()) 
+											mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
+												mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() - 1]);
+										else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
+									}
 								}
-								if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
-								{
-									selectedToken->switchSelected();
-									selectedToken = nullptr;
-									tokenSelected = false;
-									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
-								}
+						//		else if (moveCount > 0)
 							}
 						}
-						else if (t != nullptr && t->getOwnership() == 1) // select or perform action
+						else if (t != nullptr && t->getOwnership() == 1) 
 						{
 							int rank = t->getRank();
 							mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
@@ -156,12 +174,17 @@ void Renderer::game()
 								}
 								if (found) break;
 							}
-							if (token == selectedToken)
+							if (t == selectedToken)
 							{
 								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
 								tokenSelected = false;
 								token->switchSelected();
 								selectedToken = nullptr;
+								if (moveCount > 0)
+								{
+									moveCount = 0;
+									p1Turn = true;
+								}
 							}
 							else
 							{
@@ -181,15 +204,18 @@ void Renderer::game()
 										moveCount = 0;
 									}
 									else moveCount++;
-									
+									if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
+									{
+										if (mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed())
+											mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
+												mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() + 12]); 
+										else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
+										selectedToken->switchSelected();
+										selectedToken = nullptr;
+										tokenSelected = false;
+									}
 								}
-								if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
-								{
-									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
-									selectedToken->switchSelected();
-									selectedToken = nullptr;
-									tokenSelected = false;
-								}
+
 							}
 						}
 						else if (t != nullptr && t->getOwnership() == 2) // select or perform action
@@ -212,6 +238,7 @@ void Renderer::game()
 				mWindow->draw(*mGrid[i][j]);
 			}
 		}
+		mWindow->draw(*mSidebar);
 		mWindow->display();
 		if (mGame->isGameOver()) mWindow->close();
 	}
@@ -337,6 +364,7 @@ bool Renderer::creator()
 				mWindow->draw(*mGrid[i][j]);
 			}
 		}
+		mWindow->draw(*mSidebar);
 		mWindow->display();
 		toNext = true;
 		for (int i = 0; i < 12; i++)
