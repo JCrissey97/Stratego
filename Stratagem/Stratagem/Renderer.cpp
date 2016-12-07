@@ -36,7 +36,7 @@ Renderer::Renderer()
 }
 void Renderer::game()
 {
-	creator();
+	bool keepGoing = creator();
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 10; j++)
@@ -48,205 +48,410 @@ void Renderer::game()
 	bool tokenSelected = false;
 	int moveCount = 0;
 	Token * selectedToken = nullptr;
-	
-	while (mWindow->isOpen())
+	Vector2<float> size1(60, 60);
+	Texture * buttonT = new Texture();
+	buttonT->loadFromFile("closeout.png");
+	RectangleShape button(size1);
+	button.setTexture(buttonT);
+	button.setOrigin(button.getGlobalBounds().width, 0);
+	button.setPosition(800, 0);
+	bool breakLoop = false;
+	if (keepGoing)
 	{
-		Event e;
-		while (mWindow->pollEvent(e))
+		while (mWindow->isOpen())
 		{
-			if (e.type == Event::Closed)
+			Event e;
+			while (mWindow->pollEvent(e))
 			{
-				mWindow->close();
-			}
-			if (e.type == Event::MouseButtonReleased)
-			{
-				int mouseX = Mouse::getPosition(*mWindow).x;
-				int mouseY = Mouse::getPosition(*mWindow).y;
-				if (mouseX <= 600 && mouseY <= 600)
+				if (e.type == Event::Closed)
 				{
-					if (p1Turn)
+					mWindow->close();
+				}
+				if (e.type == Event::MouseButtonReleased)
+				{
+					int mouseX = Mouse::getPosition(*mWindow).x;
+					int mouseY = Mouse::getPosition(*mWindow).y;
+					if (mouseX <= 600 && mouseY <= 600)
 					{
-						Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-						if (selectedToken != nullptr)
+						if (p1Turn)
 						{
-							Token * token = nullptr;
-							int fromX = -1;
-							int fromY = -1;
-							bool found = false;
-							for (int i = 0; i < 10; i++)
+							Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+							if (selectedToken != nullptr)
 							{
-								for (int j = 0; j < 10; j++)
+								Token * token = nullptr;
+								int fromX = -1;
+								int fromY = -1;
+								bool found = false;
+								for (int i = 0; i < 10; i++)
 								{
-									token = mGame->getTokenAt(i, j);
-									if (token != nullptr)
+									for (int j = 0; j < 10; j++)
 									{
-										if (token->getSelected())
+										token = mGame->getTokenAt(i, j);
+										if (token != nullptr)
 										{
-											fromX = i;
-											fromY = j;
-											found = true;
-											break;
+											if (token->getSelected())
+											{
+												fromX = i;
+												fromY = j;
+												found = true;
+												break;
+											}
 										}
 									}
+									if (found) break;
 								}
-								if (found) break;
-							}
-							if (t == selectedToken)
-							{
-								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
-								tokenSelected = false;
-								token->switchSelected();
-								selectedToken = nullptr;
-								if (moveCount > 0)
+								if (t == selectedToken)
 								{
-									p1Turn = false;
-									moveCount = 0;
-								}
-							}
-							else
-							{
-								int operation = 0;
-								bool scoutAttacked = false;
-								if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
-								else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
-								if (operation > 0 || scoutAttacked)
-								{
-									mGrid[fromX][fromY]->setTexture(mTextures[26]);
-									Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-									int rank = newToken->getRank();
-									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]); //access violation 
-									if (!(operation == 1 && newToken->getRank() == 2))
+									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
+									tokenSelected = false;
+									token->switchSelected();
+									selectedToken = nullptr;
+									if (moveCount > 0)
 									{
 										p1Turn = false;
 										moveCount = 0;
 									}
-									else
-									{
-										if (moveCount < 1) moveCount++;
-									}
-									if (!(operation == 1 && newToken->getRank() == 2) || scoutAttacked)
-									{
-										selectedToken->switchSelected();
-										selectedToken = nullptr;
-										tokenSelected = false;
-										if(mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed()) 
-											mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
-												mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() - 1]);
-										else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
-									}
 								}
-						//		else if (moveCount > 0)
-							}
-						}
-						else if (t != nullptr && t->getOwnership() == 1) 
-						{
-							int rank = t->getRank();
-							mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
-							tokenSelected = true;
-							selectedToken = t;
-							t->switchSelected();
-						}
-					}
-					else
-					{
-						Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-						if (selectedToken != nullptr)
-						{
-							Token * token = nullptr;
-							int fromX = -1;
-							int fromY = -1;
-							bool found = false;
-							for (int i = 0; i < 10; i++)
-							{
-								for (int j = 0; j < 10; j++)
+								else
 								{
-									token = mGame->getTokenAt(i, j);
-									if (token != nullptr)
+									int operation = 0;
+									bool scoutAttacked = false;
+									if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
+									else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
+									if (operation > 0 || scoutAttacked)
 									{
-										if (token->getSelected())
+										mGrid[fromX][fromY]->setTexture(mTextures[26]);
+										Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+										int rank = newToken->getRank();
+										mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]); //access violation 
+										if (!(operation == 1 && newToken->getRank() == 2))
 										{
-											fromX = i;
-											fromY = j;
-											found = true;
-											break;
+											p1Turn = false;
+											moveCount = 0;
+										}
+										else
+										{
+											if (moveCount < 1) moveCount++;
+										}
+										if (!(operation == 1 && newToken->getRank() == 2) || scoutAttacked)
+										{
+											selectedToken->switchSelected();
+											selectedToken = nullptr;
+											tokenSelected = false;
+											if (mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed())
+												mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
+													mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() - 1]);
+											else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
 										}
 									}
-								}
-								if (found) break;
-							}
-							if (t == selectedToken)
-							{
-								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
-								tokenSelected = false;
-								token->switchSelected();
-								selectedToken = nullptr;
-								if (moveCount > 0)
-								{
-									moveCount = 0;
-									p1Turn = true;
+									//		else if (moveCount > 0)
 								}
 							}
-							else
+							else if (t != nullptr && t->getOwnership() == 1)
 							{
-								int operation = 0;
-								bool scoutAttacked = false;
-								if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
-								else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
-								if (operation > 0 || scoutAttacked)
-								{
-									mGrid[fromX][fromY]->setTexture(mTextures[26]);
-									Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-									int rank = newToken->getRank();
-									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
-									if (!(operation == 1 && token->getRank() == 2))
-									{
-										p1Turn = true;
-										moveCount = 0;
-									}
-									else moveCount++;
-									if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
-									{
-										if (mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed())
-											mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
-												mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() + 12]); 
-										else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
-										selectedToken->switchSelected();
-										selectedToken = nullptr;
-										tokenSelected = false;
-									}
-								}
-
+								int rank = t->getRank();
+								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
+								tokenSelected = true;
+								selectedToken = t;
+								t->switchSelected();
 							}
 						}
-						else if (t != nullptr && t->getOwnership() == 2) // select or perform action
+						else
 						{
-							int rank = t->getRank();
-							mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
-							tokenSelected = true;
-							selectedToken = t;
-							t->switchSelected();
+							Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+							if (selectedToken != nullptr)
+							{
+								Token * token = nullptr;
+								int fromX = -1;
+								int fromY = -1;
+								bool found = false;
+								for (int i = 0; i < 10; i++)
+								{
+									for (int j = 0; j < 10; j++)
+									{
+										token = mGame->getTokenAt(i, j);
+										if (token != nullptr)
+										{
+											if (token->getSelected())
+											{
+												fromX = i;
+												fromY = j;
+												found = true;
+												break;
+											}
+										}
+									}
+									if (found) break;
+								}
+								if (t == selectedToken)
+								{
+									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
+									tokenSelected = false;
+									token->switchSelected();
+									selectedToken = nullptr;
+									if (moveCount > 0)
+									{
+										moveCount = 0;
+										p1Turn = true;
+									}
+								}
+								else
+								{
+									int operation = 0;
+									bool scoutAttacked = false;
+									if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
+									else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
+									if (operation > 0 || scoutAttacked)
+									{
+										mGrid[fromX][fromY]->setTexture(mTextures[26]);
+										Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
+										int rank = newToken->getRank();
+										mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
+										if (!(operation == 1 && token->getRank() == 2))
+										{
+											p1Turn = true;
+											moveCount = 0;
+										}
+										else moveCount++;
+										if (!(operation == 1 && token->getRank() == 2) || scoutAttacked)
+										{
+											if (mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed())
+												mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
+													mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() + 12]);
+											else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[25]);
+											selectedToken->switchSelected();
+											selectedToken = nullptr;
+											tokenSelected = false;
+										}
+									}
+
+								}
+							}
+							else if (t != nullptr && t->getOwnership() == 2) // select or perform action
+							{
+								int rank = t->getRank();
+								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
+								tokenSelected = true;
+								selectedToken = t;
+								t->switchSelected();
+							}
 						}
 					}
+					else if (button.getGlobalBounds().contains(mouseX, mouseY)) breakLoop = true;
 				}
 			}
-		}
-		mWindow->clear();
-		for (int i = 0; i < 10; i++)
-		{
-			for (int j = 0; j < 10; j++)
+			mWindow->clear();
+			for (int i = 0; i < 10; i++)
 			{
-				mWindow->draw(*mGrid[i][j]);
+				for (int j = 0; j < 10; j++)
+				{
+					mWindow->draw(*mGrid[i][j]);
+				}
+			}
+			mWindow->draw(*mSidebar);
+			mWindow->draw(button);
+			mWindow->display();
+			if (breakLoop) break;
+			if (mGame->isGameOver())
+			{
+
+				//Prompt for user name
+
+				string name = "PLAYER";
+				cout << "Thanks for playing!" << endl << "Please enter your name here: ";
+				cin >> name;
+
+				bool success = false;
+
+				//May need to change this depending on where you host your server
+
+				sf::IpAddress rec = "sawtoothservers.ddns.net";
+				unsigned short port = 4200;
+
+				//This should be taken from the user
+				char data[10];
+				strcpy_s(data, name.c_str());
+				sf::UdpSocket socket;
+				if (socket.bind(4200) != sf::Socket::Done) {
+					cout << "SOCKET BIND FAILED!" << endl;
+				}
+				char scores[50];
+
+				//Send the player name to the server
+				sf::Text * t0 = new sf::Text;
+				sf::Text * t1 = new sf::Text;
+				sf::Text * t2 = new sf::Text;
+				sf::Text * t3 = new sf::Text;
+				sf::Text * t4 = new sf::Text;
+				sf::Text * t5 = new sf::Text;
+				if (socket.send(data, 10, rec, port) == sf::Socket::Done)
+				{
+					//Again, change this if you host this elsewhere.
+
+					sf::IpAddress sender = "sawtoothservers.ddns.net";
+					unsigned short port = 4200;
+					std::size_t recieved;
+					socket.receive(scores, 50, recieved, sender, port);
+					success = true;
+
+					//REALLY BAD BUT FUNCTIONAL PART
+
+					char a[10];
+					memset(a, 0, 10);
+					for (int i = 0; i < 10; i++) {
+						a[i] = scores[i];
+					}
+					string s1(a);
+					memset(a, 0, 10);
+					for (int j = 10; j < 20; j++) {
+						a[j - 10] = scores[j];
+					}
+					string s2(a);
+					memset(a, 0, 10);
+					for (int k = 20; k < 30; k++) {
+						a[k - 20] = scores[k];
+					}
+					string s3(a);
+					memset(a, 0, 10);
+					for (int l = 30; l < 40; l++) {
+						a[l - 30] = scores[l];
+					}
+					string s4(a);
+					memset(a, 0, 10);
+					for (int m = 40; m < 50; m++) {
+						a[m - 40] = scores[m];
+					}
+					string s5(a);
+					cout << endl << "Past 5 Players: " << endl << endl;
+					cout << s1 << endl;
+					cout << s2 << endl;
+					cout << s3 << endl;
+					cout << s4 << endl;
+					cout << s5 << endl;
+					//END REALLY BAD PART
+					//Prints to console; this is where we should print to screen.
+
+					//You're welcome to take a look at what we were trying to do here;
+					//for some reason the font wouldn't display onscreen no matter what
+					//position we fed it, text we set, or color we chose. I have no idea.
+
+					//cout << "RECIEVED PLAYER LIST :" << endl;
+					//sf::Font * f = new sf::Font;
+					//sf::Color c = sf::Color::Yellow;
+					//bool status = f->loadFromFile("Seagramtfb.ttf");
+					//cout << status << endl;
+					//t0->setString("RECENT PLAYERS:");
+					//t0->setFont(*f);
+					//t0->setFillColor(sf::Color::Yellow);
+					////t0->setPosition(300, 300);
+					//int x0 = t0->getGlobalBounds().width / 2;
+					//int height = t0->getGlobalBounds().height;
+					//t0->setOrigin(x0, 0);
+					//cout << s1 << endl;
+
+					//t1->setString(s1);
+					//t1->setFont(*f);
+					//t1->setFillColor(c);
+					//t0->setPosition(0, 0);
+					//int x1 = t1->getGlobalBounds().width / 2;
+					//int height1 = t1->getGlobalBounds().height;
+					//t1->setOrigin(x1, 0);
+					//cout << s2 << endl;
+
+					//t2->setString(s2);
+					//t2->setFont(*f);
+					//t2->setFillColor(c);
+					//t0->setPosition(400, 300);
+					//int x2 = t2->getGlobalBounds().width / 2;
+					//int height2 = t2->getGlobalBounds().height;
+					//t2->setOrigin(x2, 0);
+					//cout << s3 << endl;
+
+					//t3->setString(s3);
+					//t3->setFont(*f);
+					//t3->setFillColor(c);
+					//t0->setPosition(400, 400);
+					//int x3 = t3->getGlobalBounds().width / 2;
+					//int height3 = t3->getGlobalBounds().height;
+					//t3->setOrigin(x3, 0);
+					//cout << s4 << endl;
+
+					//t4->setString(s4);
+					//t4->setFont(*f);
+					//t4->setFillColor(c);
+					//t0->setPosition(400, 500);
+					//int x4 = t4->getGlobalBounds().width / 2;
+					//int height4 = t4->getGlobalBounds().height;
+					//t4->setOrigin(x4, 0);
+					//cout << s5 << endl;
+
+					//t5->setString(s5);
+					//t5->setFont(*f);
+					//t5->setFillColor(c);
+					//t0->setPosition(-400, 600);
+					//int x5 = t5->getGlobalBounds().width / 2;
+					//int height5 = t5->getGlobalBounds().height;
+					//t5->setOrigin(x5, 0);
+					mWindow->close();
+				}
+				//while (mWindow->isOpen())
+				//{
+				//	Event e;
+				//	while (mWindow->pollEvent(e))
+				//	{
+				//		if (e.type == Event::Closed) mWindow->close();
+				//	}
+				//	mWindow->clear();
+				//	//mWindow->draw(...);
+				//	mWindow->draw(*t0);
+				//	mWindow->draw(*t1);
+				//	mWindow->draw(*t2);
+				//	mWindow->draw(*t3);
+				//	mWindow->draw(*t4);
+				//	mWindow->draw(*t5);
+				//	mWindow->display();
+				//}
+
 			}
 		}
-		mWindow->draw(*mSidebar);
-		mWindow->display();
-		if (mGame->isGameOver()) mWindow->close();
 	}
 }
 
 void Renderer::rules()
 {
-
+	Vector2<float> size(800, 740);
+	Texture * bgT = new Texture();
+	bgT->loadFromFile("rules.png");
+	RectangleShape bg(size);
+	bg.setTexture(bgT);
+	size.x = 60;
+	size.y = 60;
+	Texture * buttonT = new Texture();
+	buttonT->loadFromFile("closeout.png");
+	RectangleShape button(size);
+	button.setTexture(buttonT);
+	button.setOrigin(button.getGlobalBounds().width, 0);
+	button.setPosition(800, 0);
+	bool breakLoop = false;
+	while (mWindow->isOpen())
+	{
+		Event e;
+		while (mWindow->pollEvent(e))
+		{
+			if (e.type == Event::Closed) mWindow->close();
+			if (e.type == Event::MouseButtonReleased)
+			{
+				int mouseX = Mouse::getPosition(*mWindow).x;
+				int mouseY = Mouse::getPosition(*mWindow).y;
+				if (button.getGlobalBounds().contains(mouseX, mouseY)) breakLoop = true;
+			}
+		}
+		mWindow->clear();
+		mWindow->draw(bg);
+		mWindow->draw(button);
+		mWindow->display();
+		if (breakLoop) break;
+	}
 }
 
 void Renderer::menu()
@@ -305,6 +510,14 @@ void Renderer::menu()
 
 bool Renderer::creator()
 {
+	Vector2<float> size1(60, 60);
+	Texture * buttonT = new Texture();
+	buttonT->loadFromFile("closeout.png");
+	RectangleShape button(size1);
+	button.setTexture(buttonT);
+	button.setOrigin(button.getGlobalBounds().width, 0);
+	button.setPosition(800, 0);
+	bool breakLoop = false;
 	int maxRanks[] = { 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6, 1 };
 	int pieces[10][4];
 	for (int i = 0; i < 10; i++)
@@ -354,6 +567,7 @@ bool Renderer::creator()
 
 
 				}
+				if (button.getGlobalBounds().contains(mouseX, mouseY)) return false;
 			}
 		}
 		mWindow->clear();
@@ -365,6 +579,7 @@ bool Renderer::creator()
 			}
 		}
 		mWindow->draw(*mSidebar);
+		mWindow->draw(button);
 		mWindow->display();
 		toNext = true;
 		for (int i = 0; i < 12; i++)
@@ -441,6 +656,8 @@ bool Renderer::creator()
 				mWindow->draw(*mGrid[i][j]);
 			}
 		}
+		mWindow->draw(*mSidebar);
+		mWindow->draw(button);
 		mWindow->display();
 		toNext = true;
 		for (int i = 0; i < 12; i++)
@@ -452,6 +669,7 @@ bool Renderer::creator()
 			}
 		}
 		if (toNext) break;
+		if (breakLoop) return false;
 	}
 	/*
 	RectangleShape * rectangles[10][10];

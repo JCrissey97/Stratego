@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "GameState.h"
+#include "SFML\Network.hpp"
 
 using sf::Vector2;
 using sf::RenderWindow;
@@ -14,6 +15,7 @@ using sf::Mouse;
 using sf::Event;
 using std::cout;
 using std::endl;
+using std::cin;
 
 class Renderer
 {
