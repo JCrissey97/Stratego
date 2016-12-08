@@ -12,42 +12,44 @@ Renderer::~Renderer()
 }
 Renderer::Renderer()
 {
+	//instantiate member objects
 	Texture * t = new Texture();
 	t->loadFromFile("sidebar.png");
-	Vector2<float> size(200, 740);
+	Vector2<float> size(200, 740); //sidebar size
 	mSidebar = new RectangleShape(size);
 	mSidebar->setTexture(t);
 	mSidebar->setPosition(600, 0);
-	VideoMode mode(800, 740);
+	VideoMode mode(800, 740); //window size
 	RenderWindow * window = new RenderWindow(mode, "Stratagem");
 	mWindow = window;
 	Texture * textures[27];
-	for (int i = 0; i < 27; i++)
+	for (int i = 0; i < 27; i++) //instantiate textures
 	{
 		textures[i] = new Texture();
 	}
 	this->loadTextures(textures);
 	for (int i = 0; i < 27; i++)
 	{
-		mTextures[i] = textures[i];
+		mTextures[i] = textures[i]; //load textures to member
 	}
 	mGame = new GameState();
-	this->renderGrid();
+	this->renderGrid(); //name self-explanatory
 }
 void Renderer::game()
 {
-	bool keepGoing = creator();
-	for (int i = 0; i < 4; i++)
+	bool keepGoing = creator(); //true if ready to continue to game
+	if (keepGoing) for (int i = 0; i < 4; i++) //initializes p2 grid squares to unknown (question marks)
 	{
 		for (int j = 0; j < 10; j++)
 		{
 			mGrid[j][i]->setTexture(mTextures[25]);
 		}
 	}
-	bool p1Turn = true;
-	bool tokenSelected = false;
-	int moveCount = 0;
-	Token * selectedToken = nullptr;
+	bool p1Turn = true; //keeps track of turns
+	bool tokenSelected = false; //whether a token is selected
+	int moveCount = 0; //scout can move twice, this keeps track so he can't move more (boolean int)
+	Token * selectedToken = nullptr; //token that is selected, nullptr if not selected
+	//create quit-to-menu button
 	Vector2<float> size1(60, 60);
 	Texture * buttonT = new Texture();
 	buttonT->loadFromFile("closeout.png");
@@ -75,14 +77,14 @@ void Renderer::game()
 					{
 						if (p1Turn)
 						{
-							Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
-							if (selectedToken != nullptr)
+							Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60); //returns square clicked, nullptr if empty
+							if (selectedToken != nullptr) //if a token is already selected
 							{
 								Token * token = nullptr;
 								int fromX = -1;
 								int fromY = -1;
 								bool found = false;
-								for (int i = 0; i < 10; i++)
+								for (int i = 0; i < 10; i++) //gets location in grid coords of selected token
 								{
 									for (int j = 0; j < 10; j++)
 									{
@@ -100,8 +102,9 @@ void Renderer::game()
 									}
 									if (found) break;
 								}
-								if (t == selectedToken)
+								if (t == selectedToken) //if the token clicked is the token selected
 								{
+									//deselect token and update relevent variables
 									mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
 									tokenSelected = false;
 									token->switchSelected();
@@ -112,43 +115,48 @@ void Renderer::game()
 										moveCount = 0;
 									}
 								}
-								else
+								else //if selected token is different from token clicked
 								{
-									int operation = 0;
-									bool scoutAttacked = false;
+									int operation = 0; //stores type of operation performed
+									//scout can move & attack in same turn, but must move first
+									bool scoutAttacked = false; // keeps track of whether scout attacked
 									if (moveCount < 1) operation = mGame->operate(fromX, fromY, mouseX / 60, mouseY / 60, selectedToken->getOwnership());
 									else if (token->getRank() == 2) scoutAttacked = mGame->attackPiece(fromX, fromY, mouseX / 60, mouseY / 60);
-									if (operation > 0 || scoutAttacked)
+									if (operation > 0 || scoutAttacked) //scoutAttacked == true & operation == false handled
 									{
+										//updates rendering
 										mGrid[fromX][fromY]->setTexture(mTextures[26]);
 										Token * newToken = mGame->getTokenAt(mouseX / 60, mouseY / 60);
 										int rank = newToken->getRank();
 										mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]); //access violation 
-										if (!(operation == 1 && newToken->getRank() == 2))
+										if (!(operation == 1 && newToken->getRank() == 2)) //if not scout first move
 										{
+											//end turn
 											p1Turn = false;
 											moveCount = 0;
 										}
-										else
+										else //if scout first move
 										{
-											if (moveCount < 1) moveCount++;
+											if (moveCount < 1) moveCount++; //increment, but check first just in case
 										}
-										if (!(operation == 1 && newToken->getRank() == 2) || scoutAttacked)
+										if (!(operation == 1 && newToken->getRank() == 2) || scoutAttacked) //if anything but scout first move
 										{
+											//performe deselect, update rendering
 											selectedToken->switchSelected();
 											selectedToken = nullptr;
 											tokenSelected = false;
-											if (mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed())
+											if (mGame->getTokenAt(mouseX / 60, mouseY / 60)->isRevealed()) //if revealed after attack, set to constantly visible
 												mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[
 													mGame->getTokenAt(mouseX / 60, mouseY / 60)->getRank() - 1]);
-											else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]);
+											else mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[12]); //if not revealed, return to "?"
 										}
 									}
-									//		else if (moveCount > 0)
+									//		else if (moveCount > 0) unused
 								}
 							}
-							else if (t != nullptr && t->getOwnership() == 1)
+							else if (t != nullptr && t->getOwnership() == 1) //if no token selected & clicked square a valid token
 							{
+								//select token
 								int rank = t->getRank();
 								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[(rank - 1)]);
 								tokenSelected = true;
@@ -156,7 +164,7 @@ void Renderer::game()
 								t->switchSelected();
 							}
 						}
-						else
+						else //if p2's turn, perform same operations
 						{
 							Token * t = mGame->getTokenAt(mouseX / 60, mouseY / 60);
 							if (selectedToken != nullptr)
@@ -227,7 +235,7 @@ void Renderer::game()
 
 								}
 							}
-							else if (t != nullptr && t->getOwnership() == 2) // select or perform action
+							else if (t != nullptr && t->getOwnership() == 2) 
 							{
 								int rank = t->getRank();
 								mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[rank + 12]);
@@ -421,13 +429,13 @@ void Renderer::rules()
 {
 	Vector2<float> size(800, 740);
 	Texture * bgT = new Texture();
-	bgT->loadFromFile("rules.png");
+	bgT->loadFromFile("rules.png"); //load rules texture
 	RectangleShape bg(size);
 	bg.setTexture(bgT);
 	size.x = 60;
 	size.y = 60;
 	Texture * buttonT = new Texture();
-	buttonT->loadFromFile("closeout.png");
+	buttonT->loadFromFile("closeout.png"); //load return-to-menu button
 	RectangleShape button(size);
 	button.setTexture(buttonT);
 	button.setOrigin(button.getGlobalBounds().width, 0);
@@ -443,6 +451,7 @@ void Renderer::rules()
 			{
 				int mouseX = Mouse::getPosition(*mWindow).x;
 				int mouseY = Mouse::getPosition(*mWindow).y;
+				//if click return to menu, break the loop
 				if (button.getGlobalBounds().contains(mouseX, mouseY)) breakLoop = true;
 			}
 		}
@@ -453,16 +462,16 @@ void Renderer::rules()
 		if (breakLoop) break;
 	}
 }
-
+// renders the main menu
 void Renderer::menu()
 {
 	Texture * bgT = new Texture();
-	bgT->loadFromFile("MENU.png");
+	bgT->loadFromFile("MENU.png"); // render menu background
 	Vector2<float> size(400, 350);
 	RectangleShape bg(size);
 	bg.scale(2.0f, 2.0f);
 	bg.setTexture(bgT);
-
+	// render buttons
 	Texture * play = new Texture();
 	play->loadFromFile("PLAYBUTTON.png");
 	Texture * rules = new Texture();
@@ -489,18 +498,19 @@ void Renderer::menu()
 			{
 				int mouseX = Mouse::getPosition(*mWindow).x;
 				int mouseY = Mouse::getPosition(*mWindow).y;
-				if (playButton.getGlobalBounds().contains(mouseX, mouseY))
+				if (playButton.getGlobalBounds().contains(mouseX, mouseY)) //if clicked on play button
 				{
-					this->game();
+					this->game(); //start game
 				}
-				if (rulesButton.getGlobalBounds().contains(mouseX, mouseY))
+				if (rulesButton.getGlobalBounds().contains(mouseX, mouseY)) //if clicked on rules button
 				{
-					this->rules();
+					this->rules(); // go to rules game
 				}
 			}
 		}
 		mWindow->clear();
-		mWindow->draw(bg);
+		mWindow->draw(bg); //draw background
+		//draw buttons
 		mWindow->draw(playButton);
 		mWindow->draw(rulesButton);
 		mWindow->display();
@@ -510,32 +520,36 @@ void Renderer::menu()
 
 bool Renderer::creator()
 {
+	//load return-to-menu button (Yellow "X")
 	Vector2<float> size1(60, 60);
 	Texture * buttonT = new Texture();
 	buttonT->loadFromFile("closeout.png");
 	RectangleShape button(size1);
 	button.setTexture(buttonT);
+
+	//sets the origin to the upper right corner to make placement easier
 	button.setOrigin(button.getGlobalBounds().width, 0);
-	button.setPosition(800, 0);
-	bool breakLoop = false;
+	button.setPosition(800, 0); //sets position to upper right corner
+	bool breakLoop = false; //represents player's desire to return to menu
+	//holds max number of each rank
 	int maxRanks[] = { 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6, 1 };
-	int pieces[10][4];
-	for (int i = 0; i < 10; i++)
+	int pieces[10][4]; //represents rank at location x, y within bounds of current player's placeable area
+	for (int i = 0; i < 10; i++) //initialize pieces
 	{
 		for (int j = 0; j < 4; j++)
 		{
 			pieces[i][j] = -1;
 		}
 	}
-	bool toNext = false;
+	bool toNext = false; //true if piece placement is complete
 	while (mWindow->isOpen())
 	{
-		int currRanks[12];
+		int currRanks[12]; //represents current number of each rank on field
 		for (int i = 0; i < 12; i++)
 		{
 			currRanks[i] = 0;
 		}
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 10; i++) //loads currRanks
 		{
 			for (int j = 0; j < 4; j++)
 			{
@@ -550,36 +564,39 @@ bool Renderer::creator()
 			{
 				int mouseX = Mouse::getPosition(*mWindow).x;
 				int mouseY = Mouse::getPosition(*mWindow).y;
-				if (mouseY >= 360 && isSquareAt(mouseX, mouseY))
+				if (mouseY >= 360 && isSquareAt(mouseX, mouseY)) //if mouse is within legal bounds to click
 				{
 					int row = (mouseY - 360) / 60;
 					int column = mouseX / 60;
 					if (pieces[column][row] >= 11) pieces[column][row] = 0;
 					else pieces[column][row] += 1;
 
+					//cycles through ranks until it finds one that has not been maxed out
 					while (currRanks[pieces[column][row]] >= maxRanks[pieces[column][row]])
 					{
 						if (pieces[column][row] >= 11) pieces[column][row] = 0;
 						else pieces[column][row] += 1;
 					}
 
+					//set the texture
 					mGrid[mouseX / 60][mouseY / 60]->setTexture(mTextures[pieces[column][row]]);
 
 
 				}
-				if (button.getGlobalBounds().contains(mouseX, mouseY)) return false;
+				if (button.getGlobalBounds().contains(mouseX, mouseY)) return false; //return to menu
 			}
 		}
 		mWindow->clear();
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 10; i++) //draw game board
 		{
 			for (int j = 0; j < 10; j++)
 			{
 				mWindow->draw(*mGrid[i][j]);
 			}
 		}
-		mWindow->draw(*mSidebar);
-		mWindow->draw(button);
+		//draw extra elements
+		mWindow->draw(*mSidebar); //legend
+		mWindow->draw(button); //return-to-menu button
 		mWindow->display();
 		toNext = true;
 		for (int i = 0; i < 12; i++)
@@ -590,9 +607,10 @@ bool Renderer::creator()
 				break;
 			}
 		}
-		if (toNext) break;
+		if (toNext) break; //breaks loop if all ranks are maxed out (all spaces are filled)
 	}
 
+	//rinse & repeat for player 2
 	int pieces2[10][4];
 	for (int i = 0; i < 10; i++)
 	{
@@ -674,6 +692,8 @@ bool Renderer::creator()
 			if (breakLoop) return false;
 		}
 	}
+
+	//unused
 	/*
 	RectangleShape * rectangles[10][10];
 
@@ -694,8 +714,8 @@ bool Renderer::creator()
 			pPieces2[i][j] = &pieces2[i][j];
 		}
 	}
-	mGame->convert(pPieces, pPieces2); //update GameState
-	return toNext;
+	mGame->convert(pPieces, pPieces2); //update GameState, loads tokens
+	return toNext; //returns whether ready to coninue
 }
 void Renderer::renderGrid()
 {
@@ -704,16 +724,17 @@ void Renderer::renderGrid()
 	{
 		for (int j = 0; j < 10; j++)
 		{
-
+			//render grid square at (i,j)
 			mGrid[i][j] = new RectangleShape(size);
 			mGrid[i][j]->setTexture(mTextures[26]);
-			Vector2<float> pos(i * 60, (j * 60));
+			Vector2<float> pos(i * 60, (j * 60)); //calculate real position in window coords
 			mGrid[i][j]->setPosition(pos);
 		}
 	}
 }
 void Renderer::loadTextures(Texture * textures[27])
 {
+	//since pointers, changes are retained
 	textures[0]->loadFromFile("spy.png");
 	textures[1]->loadFromFile("scout.png");
 	textures[2]->loadFromFile("miner.png");
@@ -743,19 +764,21 @@ void Renderer::loadTextures(Texture * textures[27])
 	textures[26]->loadFromFile("blanksquare.png");
 }
 
-RectangleShape * Renderer::getSquareAt(int x, int y)
-{
-	return mGrid[x / 60][y / 60];
-}
-
+//Following functions were written, but then went unused
+//Useful, but unnecessary.
+//RectangleShape * Renderer::getSquareAt(int x, int y)
+//{
+//	return mGrid[x / 60][y / 60];
+//}
+//
 bool Renderer::isSquareAt(int x, int y)
 {
 	bool result = false;
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 10; i++) //iterate through grid squares
 	{
 		for (int j = 0; j < 10; j++)
 		{
-			if (mGrid[i][j]->getGlobalBounds().contains(x, y)) result = true;
+			if (mGrid[i][j]->getGlobalBounds().contains(x, y)) result = true; //if grid contains supplied point, return true
 		}
 	}
 	return result;
